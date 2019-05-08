@@ -61,6 +61,9 @@ function func_winmnt () {
 	read n
 	case $n in
 
+###	This section creates the vmdk image that links to the physical disk with the VBoxManage command. 
+##	It asks the user to select the disk after printing lsblk then plugs their choice into var_windisk
+#	It then takes $var_windisk and plugs it into VBoxManage command.
 		1) echo "physical disk passthrough selected!"
 			echo "Displaying partition table, please select which disk windows is installed on"
 			lsblk
@@ -71,9 +74,9 @@ function func_winmnt () {
 					if  [[ $var_confirm == y ]] || [[ $var_confirm == Y ]]; then
 						echo "Mounting physical disk"
 							VBoxManage internalcommands createrawvmdk \ 
-							-filename /vbox/disks/windisk.vmdk -rawdisk /dev/$var_windisk \
+							-filename /vbox/disks/windisk.vmdk -rawdisk /dev/$var_windisk
 							echo "done!"
-					elif {{ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
+					elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
 						echo "Returning to menu!"
 						 func_winmnt
 
@@ -81,13 +84,54 @@ function func_winmnt () {
 
 			echo "Returning to menu!";;
 
-
+#	This section isn't quite up to the standard I want yet, but it basically works the same way except it asks for the partition  number as well and plugs it
+#	    into another vboxmanage command
 		2) echo "physical partition passthrough selected!"
-				echo 
+			echo "Displaying partition table, please select which disk windows is installed on!"
+			lsblk
+			echo "example: sda sdb ..."
+			read var_windisk
+			echo "$var_windisk chosen!"
+			echo "Please select partition windows is installed on"
+			read var_winpart
+			echo "Is this correct? (Y/N)?"
+					read var_confirm
+						if [[ $var_confirm == y ]] || [[ $var_confirm == Y ]]; then
+							echo "Mounting physical partition!"
+								VBoxManage internalcommands createrawvmdk \
+								-filename /vbox/disks/winpart.vmdk -rawdisk /dev/$var_windisk -partition $var_winpart
+								echo "Done!"
+						elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
+							echo " Returning to menu"
+							func_winmnt
+
+						fi
+			func_winmnt;;
 
 
 
 
+		3) echo "Returning to main menu!"
+			func_vboxmain;;
+
+
+	esac
 
 
 }
+
+func_vboxmain
+
+
+
+
+
+
+
+
+
+
+
+
+
+
