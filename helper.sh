@@ -44,7 +44,7 @@ read var_confirm
 							VBoxManage internalcommands createrawvmdk \ 
 							-filename /vbox/windisk.vmdk -rawdisk /dev/$var_windisk
 							echo "done!"
-					elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
+	elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
 						echo "Restarting"
 						func_autowin
 	fi
