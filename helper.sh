@@ -6,7 +6,7 @@ if [ -d /vbox ]; then
 	echo "Vbox directory exists, proceeding!"
 else 
 	echo "Vbox directory does not exist, creating it now!"
-	sudo mkdir vbox
+	sudo mkdir /vbox
 fi
 
 if [ -d /vbox/iso ]; then
@@ -41,8 +41,7 @@ echo "Is this correct (Y/N)"
 read var_confirm
 	if  [[ $var_confirm == y ]] || [[ $var_confirm == Y ]]; then
 						echo "Mounting physical disk"
-							VBoxManage internalcommands createrawvmdk \ 
-							-filename /vbox/windisk.vmdk -rawdisk /dev/$var_windisk
+							VBoxManage internalcommands createrawvmdk -filename /vbox/windisk.vmdk -rawdisk /dev/$var_windisk
 							echo "done!"
 	elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
 						echo "Restarting"
@@ -57,15 +56,23 @@ echo "Creating virtual machine!"
 echo "Done!"
 
 echo "Modifying VM!"
-	sudo vboxmanage modifyvm win10 \
-		--memory 4096 	\
-		--cpus	2		\
-		--nic	nat		\
+	sudo vboxmanage modifyvm win10 --memory 4096 --cpus 2
+#		--memory 4096 	\
+#		--cpus	2		\
+#		--nic1	nat		
 echo "Done!"
+
+echo "configuring controllers"
+	sudo vboxmanage storagectl win10 \
+			--name sata_controller \
+			--add sata 				\
+			--controller Intelahci	\
+			--portcount 2			\
+			--bootable on
 
 echo "Attaching disk!"
 	sudo vboxmanage storageattach win10	\
-		--storagectl "Sata Controller" \
+		--storagectl sata_controller \
 		--device 0	\
 		--port 0	\
 		--type hdd	\
@@ -73,8 +80,8 @@ echo "Attaching disk!"
 
 echo "Attaching iso"
 	sudo vboxmanage storageattach win10	\
-		--storagectl IDE	\
-		--port 0	\
+		--storagectl sata_controller	\
+		--port 1	\
 		--device 0	\
 		--type dvddrive	\
 		--medium "/vbox/iso/gandalf.iso"
@@ -118,4 +125,6 @@ read n
 
 
 }
+
+func_dircheck
 
