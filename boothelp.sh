@@ -122,7 +122,7 @@ case $n in
 
 	7) echo "starting VM!" 
 		echo "Creating VM!"
-			sudo vboxmanage create vm \
+			sudo vboxmanage createvm \
 				--name test \
 				--ostype $var_os \
 				--register
