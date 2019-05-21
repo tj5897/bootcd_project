@@ -1,5 +1,7 @@
 #! /bin/bash
 
+###	This is just the check that makes sure the /vbox directory exists, and that the /vbox/iso directory exists, if they don't, it makes it. This fires before the main menu
+
 function func_dircheck () {
 
 if [ -d /vbox ]; then
@@ -16,9 +18,18 @@ else
                 sudo mkdir /vbox/iso
 fi
 
+if [ -d /vbox/vms ]; then
+	echo "/vbox/vms exists, continuing"
+else
+	echo "/vbox/vms does not exist, creating now!"
+fi
+
 func_mainmenu
 }
 
+
+
+#	This is the meat of the code, it's the menu that lets you configure virtualbox, passthrough your physical disk, choosen which iso to stick in the virtual drive, etc
 
 function func_vmmenu () {
 echo "Virtual Machine menu!"
@@ -29,12 +40,18 @@ echo "3: Set number of cpu cores"
 echo "4: Set allocated RAM"
 echo "5: Select VM type"
 echo "6: Set VM name"
-echo "7: Start VM"
+echo "7: Save VM"
+echo "8: Start VM"
+echo "a: auto config"
 echo "r: Return to main menu"
 echo "q: Drop to command line"
 
+#	Basic case menu
+
 read n
 case $n in
+#	This part lets the user select what iso they would like to mount ie hiren's boot cd, gandalf's boot disk, a windows installation disk, a linux distro, hell DBAN too possibly
+
 	1) echo "Please select disk image from iso folder"
 		ls /vbox/iso
 		read var_iso
@@ -50,6 +67,9 @@ case $n in
 						func_vmmenu
 					fi
 				echo "Done!";;
+
+	#######	This lists the physical partitions ###########
+	######  It lists the partitions with lsblk, asks the user which block device they would like to use, then creates the raw disk vmdk file in the /vbox/iso folder. 
 
 	2) lsblk 
 	 echo "Please select physcial drive the partition you wish to work on is located"
@@ -68,7 +88,7 @@ case $n in
 			func_vmmenu;;
 
 
-
+	### Lets the user assign CPU cores to the vm"
 
 	3) echo "Please select number of cpu cores to allocate"
 		read var_cpu
@@ -82,7 +102,7 @@ case $n in
 				fi
 			echo "Done!"
 			func_vmmenu;;
-
+	### Same as above, but with RAM. 
 	4) echo "Please input the amount of RAM (in MB) you wish to allocate to the VM"
 		read var_ram
 	   echo "$var_ram chosen!"
@@ -97,7 +117,7 @@ case $n in
 		echo "Done!"
 		func_vmmenu;;
 
-
+	#This will probably be automated later but it sets the vm type ie what OS you're wanting to virtualize
 	5) echo "Show VM types? (Y/N)"
 		read var_confirm
 			if [[ $var_confirm == Y ]] || [[ $var_confirm == y ]]; then
@@ -113,17 +133,33 @@ case $n in
 				echo "Continuing!"
 			elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
 				echo "unsetting var_os and returning to menu"
-					var_os = 0
+					var_os=none
 					func_vmmenu
 			fi
 		echo "Done, returning to menu!"
 		func_vmmenu;;
 
+	# You get to name it!
+	6) echo "Please input vm name"
+		read var_name
+		echo "$var_name chosen, is this correct? (Y/N)"
+			read var_confirm
+			if [[ $var_confirm == Y ]] || [[ $var_confirm == y ]]; then
+				echo "Continuing!"
+			elif [[ $var_confirm == N ]] || [[ $var_confirm == n ]]; then
+				echo "returning to menu"
+				func_vmmenu
+			fi
+		echo "Done, returning to menu!"
+		func_vmmenu;;
+##	Probably going to change this later, but this section pops in the variables set by the above options, creates the vm (multiple times for now), configures it with vboxmanage and some bash arrays,
+##	Then launches it. A better way to go about this would be to have this option create the vm, then have a seperate option that lists VMs and lets you choose one to launch, this opens up a modifyvm
+##	option as well
 
-	7) echo "starting VM!" 
+	7)
 		echo "Creating VM!"
 			sudo vboxmanage createvm \
-				--name test \
+				--name $var_name \
 				--ostype $var_os \
 				--register
 		echo "Done, modifying VM!"
@@ -150,17 +186,28 @@ case $n in
 				--type dvddrive \
 				--medium "/vbox/iso/$var_iso"
 		echo "Done!"
-		echo "Starting vm"
-			sudo vboxmanage startvm test
+#		echo "Starting vm"
+#			sudo vboxmanage startvm $var_name
+		echo "Creating VM!"
+		echo "vboxmanage starvm $var_name" >> /vbox/vms/$var_name
 		echo "Done!"
 		func_vmmenu;;
-		
+
+
+#	8) echo "
+
+	8) echo "Please select vm to load"
+		ls /vbox/vms/
+	   echo "Please select vm to load"
+		read var_vmsav
+	  echo "$var_vmsav chosen, launching!"
+		sudo bash /vbox/vms/$var_vmsac ;;
 esac
 
 }
 
 
-
+#This is the main menu function, right now it's just the first option that does anything. As I expand and polish the vboxmanager front end, I'll expand these functions
 
 function func_mainmenu () {
 
