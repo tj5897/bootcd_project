@@ -213,7 +213,7 @@ function func_mainmenu () {
 
 echo "MAIN MENU"
 echo "1: Virtual Machine Settings"
-echo "2: Download isos"
+echo "2: Download images and utilites"
 echo "3: On Disk Utilities"
 echo "q: quit"
 
@@ -223,7 +223,7 @@ read n
 			func_vmmenu;;
 
 		2) echo "Going to download menu"
-			func_download;;
+			func_downloadutil;;
 
 		3) echo "Proceeding to on disk utils menu"
 			func_utils;;
@@ -232,6 +232,74 @@ read n
 			exit;;
 
 	esac
+
+}
+
+##		This section is the utility/image downloader It current just downloads the latest linux LTS releases, arch, and Hiren't boot cd"
+##			I'll probably add more menus allowing you to download different versions of each distro
+##			Will have to figure something out for the gandalf's PE one. Might be able to host it on github, idk"
+##			As for the other windows installers, this will also prove difficult to wget so I'll probably implement a function where you can rip a disk, and use that iso, or just physically
+##		    	use a windows installation disk/flash drive, again features for later
+function func_downloadutil () {
+echo "Image and Utilities download function!"
+	echo "1: Gandalf's boot cd"
+	echo "2: Hiren's Boot cd"
+	echo "3: Arch Linux Installer"
+	echo "4: Debian Net install disk"
+	echo "5: Ubuntu live disk"
+	echo "6: Windows 7 Installer"
+	echo "7: Windows 8.1 Installer"
+	echo "8: Windows 10 Installer"
+	echo "r: Return to main menu"
+	
+		read n
+			case $n in
+				
+				1) echo "Downloading gandalf's boot cd"
+					echo "NOT YET IMPLEMENTED!"
+						func_downloadutil ;;
+						
+				2) echo "Downloading HBCD!"
+					sudo wget -P /vbox/iso/ https://www.hirensbootcd.org/files/Hirens.BootCD.15.2.zip
+					echo "Done!"
+					echo "Unzipping HBCD"
+						sudo unzip "/vbox/iso/Hiren's.BootCD.15.2.zip" -d /vbox/iso/
+					echo "Done!"
+					echo "Cleaning up!"
+						sudo rm /vbox/iso/BurnCDCC.exe
+						sudo rm /vbox/iso/BurnToCD.cmd
+						sudo rm /vbox/iso/changes.txt
+						sudo rm /vbox/iso/DefaultKeyboardPatch.zip
+						sudo rm /vbox/iso/HBCD.txt
+						sudo rm /vbox/iso/HBCDCustomizer.exe
+						sudo rm /vbox/iso/Hirens.BootCD.15.2.zip
+					echo "Done"
+					echo "Returning to menu!"
+						func_downloadutil;;
+						
+				3) echo "Downloading Arch installer!"
+					sudo wget -P /vbox/iso/ http://mirrors.acm.wpi.edu/archlinux/iso/2019.05.02/archlinux-2019.05.02-x86_64.iso
+					echo "Done!"
+					echo "Returning to menu"
+						func_downloadutil;; 
+					
+				4) echo "Downloading Debian net install"
+					sudo wget -P /vbox/iso/ https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-9.9.0-amd64-netinst.iso
+					echo "Done!"
+					func_downloadutil;;
+					
+				5) echo "Downloading Ubuntu 18.04 live disk" 
+					sudo wget -P /vbox/iso/ http://releases.ubuntu.com/18.04/ubuntu-18.04.2-desktop-amd64.iso
+					echo "Done!"
+					func_downloadutil;;
+				
+				r) echo "Returning to main menu!"
+						func_mainmenu;;
+					
+				*) echo "Either an invalid option or a function that is not yet supported"
+					func_downloadutil;;
+					
+			esac
 
 }
 
