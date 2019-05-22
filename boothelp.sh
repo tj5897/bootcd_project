@@ -201,7 +201,89 @@ case $n in
 	   echo "Please select vm to load"
 		read var_vmsav
 	  echo "$var_vmsav chosen, launching!"
-		sudo bash /vbox/vms/$var_vmsac ;;
+		sudo bash /vbox/vms/$var_vmsav ;;
+		
+	a) echo "Auto configuration"
+		echo "Please select which physical disk you would like to use"
+			read var_autodisk
+		echo "$var_autodisk chosen!"
+		echo "Is this correct? (Y/N)"
+			read var_confirm
+				if [[ $var_confirm == Y ]] || [[ $var_confirm == y ]]; then
+					echo "Proceeding!"
+				elif [[ $var_confirm == N ]] || [[ $var_confirm == n ]]; then
+					echo "Returning to menu!" 
+					func_vmmenu
+				fi
+			sudo vbox
+		echo "Displaying isos"
+			ls /vbox/iso
+		echo "Please input which iso you would like to use"
+			read var_autoiso
+		echo "$var_autoiso chosen!"
+		echo " Is this correct (Y/N)"
+			read var_confirm 
+				if [[ $var_confirm == Y ]] ||  [[ $var_confirm = y ]]; then
+					echo "Proceeding!"
+				elif [[ $var_confirm == N ]] || [[ $var_confirm == n ]]; then
+					echo "Returning to menu!"
+					func_vmmenu
+				fi
+		
+		echo "Show VM types? (Y/N)"
+			read var_confirm
+				if [[ $var_confirm == Y ]] || [[ $var_confirm == y ]]; then
+					sudo VBoxManage list ostypes
+				elif [[ $var_confirm == n ]] || [[ $var_confirm == N ]]; then
+					echo "No chosen, continuning!"
+				fi
+		echo "Please input OS type"
+			read var_autoos
+		echo "$var_autoos chosen!"
+		echo "Is this correct?"
+				if [[ $var_confirm == Y ]] ||  [[ $var_confirm = y ]]; then
+					echo "Proceeding!"
+				elif [[ $var_confirm == N ]] || [[ $var_confirm == n ]]; then
+					echo "Returning to menu!"
+					func_vmmenu
+				fi	
+		echo "Creating VM with minimum requirements!"
+			sudo vboxmanage createvm auto_vm \
+				--name auto_vm \
+				--ostype $var_autoos \
+				--register
+			echo "Done registering VM"
+			echo "Adding min requirements"
+				sudo vboxmanage modifyvm auto_vm --memory 2046 --cpus 1
+					echo "Configuring controller"
+						sudo vboxmanage storagectl auto \
+						--name sata_controller \
+						--add sata	      \
+						--controller Intelahci \
+						--portcount 2		\
+						--bootable on
+					echo "Attaching disk!"
+						sudo vboxmanage storageattach auto \
+							--storagectl sata_controller \
+							--device 0		\
+							--port 0		\
+							--type hdd		\
+							--medium /vbox/$var_autodisk.vmdk 
+					echo "Attaching iso!"
+						sudo vboxmanage storageattach auto \
+							--storagectl sata_controller \
+							--device 0	\
+							--port 1	\
+							--type dvddrive \
+							--medium "/vbox/iso/$var_autoiso"
+					echo "Done!"
+			echo "Starting VM!"
+				sudo vboxmanage startvm auto_vm
+			echo "Done!"
+			func_mainmenu;;
+
+			
+			
 esac
 
 }
